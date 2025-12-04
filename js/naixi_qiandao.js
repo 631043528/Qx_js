@@ -1,12 +1,16 @@
 /*
-* 奶昔论坛通用签到脚本 (GitHub 公用版)
-* 依赖参数：在 Task Argument 中传入 cookie 和 formhash
+* 奶昔论坛通用签到脚本 (修复 $request.url 错误)
+* 依赖参数：在 Quantumult X 任务 argument 中传入 cookie 和 formhash
 */
 
-// --- 1. 读取参数 ---
-// 从任务参数中解析 cookie 和 formhash
+// --- 1. 读取参数 (使用 $task.url 确保 Cron 任务环境兼容性) ---
+const urlString = $task.url || "";
+// QX Task 执行时，参数被包装在 URL query 中的 "argument" 字段
+const argumentString = new URLSearchParams(urlString).get('argument');
+
+// 从 argument 字符串中解析 cookie 和 formhash
 const params = Object.fromEntries(
-    ($request.url.split('?')[1] || '').split('&')
+    (argumentString || '').split('&')
     .filter(Boolean)
     .map(p => p.split('='))
 );
@@ -23,7 +27,6 @@ if (!Cookie || !formhash) {
 }
 
 // --- 3. 构造请求 ---
-// URL 和 Headers 使用读取到的动态参数
 const url = `https://${Host}/plugin.php?id=k_misign:sign&operation=qiandao&format=text&formhash=${formhash}`;
 
 const headers = {
@@ -43,7 +46,7 @@ const myRequest = {
     headers: headers
 };
 
-// --- 4. 发送请求并处理结果 (与优化版相同) ---
+// --- 4. 发送请求并处理结果 ---
 $task.fetch(myRequest).then(response => {
     let body = response.body;
     let msg = "";
