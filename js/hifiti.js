@@ -1,3 +1,4 @@
+$notify("测试", "脚本已运行", "入口成功");
 /**
  * hifiti.com 每日签到脚本 for Quantumult X
  * 使用方法：在脚本中填入你的 COOKIE，
@@ -6,7 +7,7 @@
 
 (async () => {
   // ---------- 请把下面的 COOKIE 字符串替换为你自己的 cookie ----------
-  const COOKIE = 'bbs_token=...; HMACCOUNT=...; bbs_sid=...; Hm_lpvt_23819a3dd53d3be5031ca942c6cbaf25=...; Hm_lvt_23819a3dd53d3be5031ca942c6cbaf25=...';
+  const COOKIE = 'Hm_lpvt_23819a3dd53d3be5031ca942c6cbaf25=1764890910; Hm_lvt_23819a3dd53d3be5031ca942c6cbaf25=1764851241,1764890705; bbs_token=iDicSuODhTG68xfT4rNmfO9GQJ13Cv_2B_2BRLhsucB5Oc3_2BLNCoCPknYlD_2FCzNAnw_2F8D2X6l5KR5eMkNgKNtGS9X1HEA7U_3D; HMACCOUNT=FDDA4E3247C64F16; bbs_sid=ne5ko4bnc6afsmjj3huomkrste';
   // -----------------------------------------------------------------------
 
   const request = {
