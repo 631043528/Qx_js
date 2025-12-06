@@ -1,19 +1,17 @@
 /*
-奶昔论坛（forum.naixi.net）自动抓 Cookie + formhash（简单稳定版）
+奶昔论坛（forum.naixi.net）自动抓 Cookie + formhash（更稳版本）
 
 专门抓这类请求：
 GET /plugin.php?id=k_misign:sign&operation=qiandao&format=text&formhash=xxxx
 
-使用方式：
-1. 在 [rewrite_local] 里用 script-request-header 挂这个脚本（见配置示例）。
-2. 开启 MitM 并信任证书。
-3. 用 Safari 打开奶昔论坛，点击“签到”按钮（会发起那条 GET）。
-4. 抓到新的 Cookie / formhash 会弹通知。
+当前用法：
+- 你在 [rewrite_local] 里写了：
+  ^https?:\/\/forum\.naixi\.net\/plugin\.php\?id=k_misign:sign&operation=qiandao&format=text&formhash=.+ url script-request-header NX_cookie.js
 
-保存键：
-- NAIXI_COOKIE   => Cookie
-- NAIXI_UA       => User-Agent
-- NAIXI_FORMHASH => formhash
+功能：
+- 保存 Cookie 到 NAIXI_COOKIE
+- 保存 UA 到 NAIXI_UA
+- 从 URL 里解析 formhash 保存到 NAIXI_FORMHASH
 */
 
 const COOKIE_KEY = "NAIXI_COOKIE";
@@ -30,16 +28,33 @@ const headers = $request.headers || {};
 const cookie = headers["Cookie"] || headers["cookie"] || "";
 const ua = headers["User-Agent"] || headers["user-agent"] || "";
 
-// 从 URL 里提取 formhash
+// --- 关键：不用正则，手动按 ? 和 & 拆分参数，找 formhash ---
 function getFormhash(u) {
   if (!u) return null;
-  const m = u.match(/[?&]formhash=([^&]+)/);
-  return m ? m[1] : null;
+  const qIndex = u.indexOf("?");
+  if (qIndex === -1) return null;
+
+  const query = u.substring(qIndex + 1); // 去掉 '?'
+  const parts = query.split("&");
+
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
+    if (!part) continue;
+    const kv = part.split("=");
+    const key = kv[0];
+    const val = kv.slice(1).join("="); // 防止值里面带 '='
+
+    if (key === "formhash" && val) {
+      return val;
+    }
+  }
+
+  return null;
 }
 
 const formhash = getFormhash(url);
 
-// 旧值
+// --- 旧值 ---
 const oldCookie = $prefs.valueForKey(COOKIE_KEY);
 const oldUa = $prefs.valueForKey(UA_KEY);
 const oldFormhash = $prefs.valueForKey(FORMHASH_KEY);
@@ -71,10 +86,15 @@ if (formhash && formhash !== oldFormhash) {
 }
 
 if (changed) {
-  $notify("奶昔论坛", "抓取成功 ✅", msg.trim() || "已有数据更新");
+  // 为了方便你确认，顺便把 URL 打出来
+  msg += "\n当前 URL：\n" + url;
+  $notify("奶昔论坛", "抓取成功 ✅", msg.trim());
+} else {
+  // 调试用，不打扰就注释掉
+  // $notify("奶昔论坛", "没有变化", "URL:\n" + url + "\nformhash: " + (formhash || "未解析到"));
 }
 
-// 调试用
+// 控制台调试
 console.log("Naixi capture => url:", url, " formhash:", formhash);
 
 $done({});
