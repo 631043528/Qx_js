@@ -1,0 +1,84 @@
+ /*
+HiFiTi 论坛自动签到脚本（Quantumult X）
+配合 hifiti_cookie.js 使用，从本地 $prefs 读取 Cookie。
+
+使用步骤：
+1. 先配置好 rewrite_local + mitm，运行 hifiti_cookie.js 抓一次 Cookie。
+2. 抓成功后，再配置 [task_local] 定时执行本脚本进行签到。
+*/
+
+const COOKIE_KEY = "HIFITI_COOKIE";
+const UA_KEY = "HIFITI_UA";
+
+// 从本地持久化里读取 Cookie 和 UA
+let HIFITI_COOKIE = $prefs.valueForKey(COOKIE_KEY) || "";
+let HIFITI_UA = $prefs.valueForKey(UA_KEY) || "";
+
+if (!HIFITI_UA) {
+  HIFITI_UA =
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 16_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile Safari/604.1";
+}
+
+function notify(title, subtitle, msg) {
+  $notify(title, subtitle, msg);
+}
+
+function done() {
+  $done();
+}
+
+async function sign() {
+  if (!HIFITI_COOKIE) {
+    notify(
+      "HiFiTi 论坛",
+      "签到失败",
+      "未获取到 Cookie。\n请先按说明运行抓 Cookie 脚本（访问一次 hifiti 的签到页面）。"
+    );
+    return done();
+  }
+
+  const req = {
+    url: "https://hifiti.com/sg_sign.htm",
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded; charset=utf-8",
+      Cookie: HIFITI_COOKIE,
+      "User-Agent": HIFITI_UA,
+      Referer: "https://hifiti.com/sg_sign.htm",
+      Accept: "text/plain, */*; q=0.01",
+      "X-Requested-With": "XMLHttpRequest",
+    },
+  };
+
+  try {
+    const resp = await $task.fetch(req);
+    const body = resp.body || "";
+    let msg = "签到完成";
+
+    try {
+      const result = JSON.parse(body);
+
+      if (result.code === 0 || result.success) {
+        msg = result.message || "签到成功！";
+        if (result.data && result.data.points) {
+          msg += `\n获得积分：${result.data.points}`;
+        }
+      } else if (result.message) {
+        msg = result.message;
+      } else {
+        msg = JSON.stringify(result);
+      }
+    } catch (e) {
+      // 不是 JSON，截取前 100 个字符看看
+      msg = body ? body.slice(0, 100) : "响应为空或格式异常";
+    }
+
+    notify("HiFiTi 论坛", "自动签到执行完毕", msg);
+  } catch (e) {
+    notify("HiFiTi 论坛", "签到请求失败", String(e && e.error ? e.error : e));
+  } finally {
+    done();
+  }
+}
+
+sign();
