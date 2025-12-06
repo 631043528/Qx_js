@@ -1,15 +1,10 @@
 /*
 奶昔论坛自动签到脚本（Quantumult X 通用版）
 
-说明：
-- Cookie：从 $prefs 中读取 NAIXI_COOKIE（由 naixi_cookie.js 自动抓取）
-- UA：    从 $prefs 读取 NAIXI_UA，没有则用默认 UA
-- formhash：从 $prefs 读取 NAIXI_FORMHASH（由 naixi_cookie.js 自动抓取）
-
-使用步骤：
-1. 确保已配置好 naixi_cookie.js 的 rewrite + mitm。
-2. Safari 打开奶昔论坛，点击一次签到，让抓取脚本跑几次。
-3. 抓到 Cookie + formhash 后，再手动运行本脚本测试签到。
+从本地持久化读取：
+- NAIXI_COOKIE   => Cookie（naixi_cookie.js 抓）
+- NAIXI_UA       => UA（naixi_cookie.js 抓）
+- NAIXI_FORMHASH => formhash（naixi_cookie.js 抓）
 */
 
 const COOKIE_KEY = "NAIXI_COOKIE";
@@ -38,7 +33,7 @@ async function signNaixi() {
     notify(
       "奶昔论坛",
       "签到失败",
-      "本地未找到 NAIXI_COOKIE。\n请先打开奶昔论坛并点击一次签到，让 naixi_cookie.js 抓取 Cookie。"
+      "本地没有 NAIXI_COOKIE。\n请先打开奶昔论坛并点击一次签到按钮，让 naixi_cookie.js 抓取 Cookie。"
     );
     return done();
   }
@@ -47,7 +42,7 @@ async function signNaixi() {
     notify(
       "奶昔论坛",
       "签到失败",
-      "本地未找到 NAIXI_FORMHASH。\n请在 Safari 中多浏览几页或再次点击签到，让抓取脚本捕获 formhash。"
+      "本地没有 NAIXI_FORMHASH。\n请再打开签到页面 / 点击一次签到，让 naixi_cookie.js 抓取 formhash。"
     );
     return done();
   }
