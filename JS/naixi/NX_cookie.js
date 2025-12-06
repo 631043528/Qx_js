@@ -1,12 +1,13 @@
 /*
-奶昔论坛（forum.naixi.net）自动抓 Cookie + formhash
+奶昔论坛（forum.naixi.net）自动抓 Cookie + formhash（简单稳定版）
+
 专门抓这类请求：
 GET /plugin.php?id=k_misign:sign&operation=qiandao&format=text&formhash=xxxx
 
 使用方式：
-1. 在 [rewrite_local] 里配 script-request-header 规则（下面有示例）。
+1. 在 [rewrite_local] 里用 script-request-header 挂这个脚本（见配置示例）。
 2. 开启 MitM 并信任证书。
-3. 用 Safari 点一次奶昔签到按钮（会发起那条 GET 请求）。
+3. 用 Safari 打开奶昔论坛，点击“签到”按钮（会发起那条 GET）。
 4. 抓到新的 Cookie / formhash 会弹通知。
 
 保存键：
@@ -20,7 +21,7 @@ const UA_KEY = "NAIXI_UA";
 const FORMHASH_KEY = "NAIXI_FORMHASH";
 
 if (typeof $request === "undefined" || !$request) {
-  $notify("奶昔论坛", "抓取失败", "本脚本需配合 script-request-header 使用");
+  $notify("奶昔论坛", "抓取失败", "当前脚本需要配合 script-request-header 使用");
   $done({});
 }
 
@@ -73,7 +74,7 @@ if (changed) {
   $notify("奶昔论坛", "抓取成功 ✅", msg.trim() || "已有数据更新");
 }
 
-// 方便你在调试里看
+// 调试用
 console.log("Naixi capture => url:", url, " formhash:", formhash);
 
 $done({});
